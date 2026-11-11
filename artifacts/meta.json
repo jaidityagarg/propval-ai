@@ -435,9 +435,10 @@
  "area_p99": 3250.0,
  "green_max_halfwidth": 0.15,
  "amber_max_halfwidth": 0.25,
- "time_adjustment": 1.0,
+ "time_adjustment": 1.159,
  "n_listings": 54465,
  "n_projects": 9717,
  "n_regions": 146,
- "share_with_project_comps": 80.8
+ "share_with_project_comps": 80.8,
+ "time_adjustment_note": "Updated from c.2022 to 2026 prices using the RBI All-India House Price Index (2022-23 = 100; Q4 2025-26 = 115.9)"
 }

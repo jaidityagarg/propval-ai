@@ -24,7 +24,8 @@ SCALE_PARAMS = dict(objective="regression_l1", learning_rate=0.05, num_leaves=31
                     verbose=-1, seed=SEED)
 MIN_PROJECT_COMPS = 3
 GREEN_MAX, AMBER_MAX = 0.15, 0.25  # 80%-range half-width limits for each light (a lender policy setting)
-TIME_ADJUSTMENT = 1.0  # set >1.0 to bring c.2022 listing prices to today (see README)
+TIME_ADJUSTMENT = 1.159  # RBI All-India House Price Index: 100 (2022-23 base) -> 115.9 (Q4 2025-26)
+TIME_ADJUSTMENT_NOTE = "Updated from c.2022 to 2026 prices using the RBI All-India House Price Index (2022-23 = 100; Q4 2025-26 = 115.9)"
 
 
 def scale_features(X, proj_n, proj_mad):
@@ -188,7 +189,7 @@ def main():
         "region_counts": df.region.astype(str).value_counts().to_dict(),
         "area_p1": float(df.area.quantile(0.01)), "area_p99": float(df.area.quantile(0.99)),
         "green_max_halfwidth": GREEN_MAX, "amber_max_halfwidth": AMBER_MAX,
-        "time_adjustment": TIME_ADJUSTMENT, "n_listings": int(len(df)),
+        "time_adjustment": TIME_ADJUSTMENT, "time_adjustment_note": TIME_ADJUSTMENT_NOTE, "n_listings": int(len(df)),
         "n_projects": int(groups.nunique()), "n_regions": int(df.region.nunique()),
         "share_with_project_comps": round(float(has_comps.mean() * 100), 1),
     }

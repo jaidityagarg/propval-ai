@@ -53,11 +53,12 @@ See `reports/accuracy.md`. The test is strict: flats are scored on projects the 
 
 - Mumbai House Prices dataset, Kaggle (listing prices, c. 2022).
 - Suburb coordinates: approximate centroids. To refine them, look each suburb up on OpenStreetMap (openstreetmap.org) and update `data/regions.csv`, then run `python train.py` again.
+- RBI All-India House Price Index, Q4 2025-26 press release (29 May 2026).
 - RBI Master Direction for Housing Finance Companies, 2021 (Annex XIV, valuation of properties) and RBI loan-to-value caps for housing loans.
 
 ## Settings you can change (in `train.py`)
 
-- `TIME_ADJUSTMENT`: the listings are from about 2022. To bring values to today, set this to the growth in a house-price index for Mumbai between 2022 and now (for example RBI's House Price Index or NHB RESIDEX). For example, 1.15 means 15% growth. Then retrain.
+- `TIME_ADJUSTMENT`: the listings are from about 2022. It is set to 1.159, from the RBI All-India House Price Index (2022-23 = 100, Q4 2025-26 = 115.9). For more precision, use the Mumbai and Thane city indices from RBI's DBIE portal (data.rbi.org.in).
 - `GREEN_MAX`, `AMBER_MAX`: range widths for each traffic-light colour. A lender's board would set these.
 
 ## Limitations (say these honestly to the judges)

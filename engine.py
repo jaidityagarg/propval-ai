@@ -186,7 +186,7 @@ class ValuationEngine:
             - (cand.project.str.lower() == (subject.get("project") or "").strip().lower()) * 3.0
         )
         top = cand.nsmallest(k, "score").copy()
-        top["adjusted_value"] = top.psf * subject["area"]
+        top["adjusted_value"] = top.psf * subject["area"] * self.meta.get("time_adjustment", 1.0)
         return top, len(same)
 
     # ---------- main valuation ----------

@@ -133,6 +133,7 @@ with tab_value:
                 <div style="font-size:15px">{lend['route']}</div></div>""", unsafe_allow_html=True)
             for w in v["warnings"]:
                 st.warning(w)
+            st.caption("📈 " + meta.get("time_adjustment_note", "Prices are c.2022 listing prices."))
             acc = v["accuracy"]
             st.caption(f"In testing, {v['light']} valuations had a median error of {acc['median_abs_pct_error']}% "
                        f"and {acc['within_10pct']}% were within ±10% of the actual price.")
@@ -155,11 +156,11 @@ with tab_value:
 
             st.subheader("Comparable listings")
             comps = v["comps"][["project", "bhk", "area", "price_inr", "psf", "status", "age", "adjusted_value"]].copy()
-            comps.columns = ["Project", "BHK", "Area (sq ft)", "Listed price", "₹ per sq ft", "Status",
-                             "New/Resale", "Implied value for this flat"]
-            comps["Listed price"] = comps["Listed price"].map(inr)
-            comps["Implied value for this flat"] = comps["Implied value for this flat"].map(inr)
-            comps["₹ per sq ft"] = comps["₹ per sq ft"].map(lambda x: f"{x:,.0f}")
+            comps.columns = ["Project", "BHK", "Area (sq ft)", "Listed price (2022)", "₹ per sq ft (2022)", "Status",
+                             "New/Resale", "Implied value for this flat (today)"]
+            comps["Listed price (2022)"] = comps["Listed price (2022)"].map(inr)
+            comps["Implied value for this flat (today)"] = comps["Implied value for this flat (today)"].map(inr)
+            comps["₹ per sq ft (2022)"] = comps["₹ per sq ft (2022)"].map(lambda x: f"{x:,.0f}")
             st.dataframe(comps, hide_index=True, width="stretch")
             st.caption(f"{v['n_same_project']} listings found in the same project." if v["n_same_project"]
                        else "No listings from the same project; comparables are similar flats in the same suburb.")
@@ -188,7 +189,7 @@ Confidence: <b>{v['light']}</b> – {html.escape(lend['route'])}</p>
 <h3>Comparables</h3>{comps.to_html(index=False)}
 <h3>Lending</h3><p>Collateral value used: {inr(lend['collateral'])} ({html.escape(lend['basis'])}).
 Maximum loan under RBI LTV caps: {inr(lend['max_loan'])}.</p><ul>{notes}</ul>
-<p style="color:#888">Prototype. Based on listing prices (c. 2022), not registered sale prices. Not a substitute for a
+<p style="color:#888">Prototype. Based on listing prices (c. 2022), not registered sale prices. {html.escape(meta.get('time_adjustment_note', ''))}. Not a substitute for a
 valuation by a registered valuer.</p></body></html>"""
             st.download_button("⬇ Download valuation report", report, file_name="valuation_report.html",
                                mime="text/html")
@@ -217,7 +218,9 @@ with tab_how:
    loan follows RBI loan-to-value caps (90% up to ₹30 L, 80% up to ₹75 L, 75% above). Valuer figures outside the AVM
    range are flagged. RBI rules on how many valuation reports are needed (≥ ₹50 L: two) are shown for every loan.
 
-**Limitations**: listing (asking) prices from about 2022, not registered sale prices; suburb-level coordinates;
+**Price update**: {meta.get('time_adjustment_note', '')}. Source: RBI press release, 29 May 2026.
+
+**Limitations**: listing (asking) prices from about 2022, updated with a single all-India index (city-level indices for Mumbai and Thane are on RBI's DBIE portal and would be more precise), not registered sale prices; suburb-level coordinates;
 Mumbai region only. The production roadmap replaces listings with registered transaction data (IGR) and the
 lender's own valuation reports, adds satellite and infrastructure features, and extends city by city.
 """)
