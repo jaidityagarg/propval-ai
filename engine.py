@@ -29,7 +29,7 @@ FEATURES = NUMERIC + CATEGORICAL
 # Friendly names for explanations (groups of model features).
 FEATURE_GROUPS = {
     "Location (suburb, distance to job hubs)": ["region", "zone", "lat", "lon"] + list(LANDMARKS),
-    "Size (carpet area)": ["area", "log_area"],
+    "Size (area)": ["area", "log_area"],
     "Layout (BHK, area per room)": ["bhk", "area_per_bhk"],
     "Property type": ["type"],
     "Construction status": ["status"],

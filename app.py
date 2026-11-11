@@ -91,7 +91,9 @@ with tab_value:
                                         "make the valuation much more confident.")
         c1, c2 = st.columns(2)
         bhk = c1.number_input("BHK", 1, 10, 2)
-        area = c2.number_input("Area (sq ft)", 150, 10000, 650, step=10)
+        area = c2.number_input("Area (sq ft, as advertised)", 150, 10000, 650, step=10,
+                               help="Use the area the way property listings quote it. The training data mixes carpet "
+                                    "area (most new projects) and built-up / super built-up area (most resale flats).")
         ptype = st.selectbox("Property type", ["Apartment", "Studio Apartment", "Villa", "Independent House",
                                                "Penthouse"])
         status = st.selectbox("Construction status", ["Ready to move", "Under Construction"])
