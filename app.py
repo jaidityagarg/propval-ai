@@ -32,6 +32,26 @@ def suburb_table():
     return reg.merge(stats, on="region")
 
 
+@st.cache_data
+def project_index():
+    idx = (get_engine().comps.groupby(["project", "region"]).size().rename("n").reset_index())
+    idx["key"] = idx.project.str.lower()
+    return idx
+
+
+def search_projects(query, limit=10):
+    """Find buildings whose name contains the most words from the query."""
+    words = [w for w in query.lower().replace(",", " ").split() if len(w) > 1]
+    if not words:
+        return project_index().iloc[0:0]
+    idx = project_index().copy()
+    idx["score"] = sum(idx.key.str.contains(w, regex=False).astype(int) for w in words)
+    best = idx[idx.score > 0].sort_values(["score", "n"], ascending=False)
+    if best.empty:
+        return best
+    return best[best.score == best.score.max()].head(limit) if best.score.max() > 1 else best.head(limit)
+
+
 eng = get_engine()
 meta = eng.meta
 subs = suburb_table().sort_values("listings", ascending=False)
@@ -47,12 +67,28 @@ with tab_value:
     left, right = st.columns([1, 2], gap="large")
     with left:
         st.subheader("Property details")
-        region = st.selectbox("Suburb", subs.region.tolist(), index=0)
-        projects = (eng.comps[eng.comps.region == region].project.value_counts().index.tolist())
         NEW = "— New / not in list —"
-        project = st.selectbox("Building / project", [NEW] + projects,
-                               help="Pick the project if it appears. Other listings in the same project make "
-                                    "the valuation much more confident.")
+        query = st.text_input("🔍 Search building anywhere in Mumbai (optional)",
+                              placeholder="e.g. raheja vistas, lodha, hiranandani")
+        picked = None
+        if query.strip():
+            hits = search_projects(query)
+            if hits.empty:
+                st.caption("No building with that name in the data. Pick the suburb below and choose "
+                           "'New / not in list'.")
+            else:
+                labels = [f"{r.project} — {r.region} ({r.n} listings)" for r in hits.itertuples()]
+                choice = st.selectbox("Matching buildings", labels)
+                picked = hits.iloc[labels.index(choice)]
+        if picked is not None:
+            region, project = picked.region, picked.project
+            st.info(f"Using **{project}**, {region}")
+        else:
+            region = st.selectbox("Suburb", subs.region.tolist(), index=0)
+            projects = (eng.comps[eng.comps.region == region].project.value_counts().index.tolist())
+            project = st.selectbox("Building / project", [NEW] + projects,
+                                   help="Pick the project if it appears. Other listings in the same project "
+                                        "make the valuation much more confident.")
         c1, c2 = st.columns(2)
         bhk = c1.number_input("BHK", 1, 10, 2)
         area = c2.number_input("Area (sq ft)", 150, 10000, 650, step=10)
