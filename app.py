@@ -19,9 +19,20 @@ LIGHT_STYLE = {
 }
 
 
+def artifacts_version():
+    """Changes whenever the model files change, so a redeploy never keeps a stale model in memory."""
+    files = sorted((ROOT / "artifacts").glob("*"))
+    return tuple((f.name, f.stat().st_size, int(f.stat().st_mtime)) for f in files) + (
+        (ROOT / "artifacts" / "meta.json").read_text().__hash__(),)
+
+
 @st.cache_resource
-def get_engine():
+def _load_engine(version):
     return ValuationEngine()
+
+
+def get_engine():
+    return _load_engine(artifacts_version())
 
 
 @st.cache_data
