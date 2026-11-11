@@ -64,6 +64,7 @@ See `reports/accuracy.md`. The test is strict: flats are scored on projects the 
 ## Limitations (say these honestly to the judges)
 
 - Asking prices, not registered sale prices.
+- Area basis: the dataset doesn't say whether areas are carpet or super built-up. New and resale listings in the same project quote the same areas, and a typical 1BHK is ~610 sq ft, so listings are treated as super built-up. The app converts whatever the user enters (carpet, built-up or super built-up) using typical Mumbai ratios of 1 : 1.20 : 1.35.
 - Suburb-level location, not exact addresses.
 - Mumbai region only.
 

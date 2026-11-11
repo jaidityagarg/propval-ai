@@ -52,6 +52,22 @@ def search_projects(query, limit=10):
     return best[best.score == best.score.max()].head(limit) if best.score.max() > 1 else best.head(limit)
 
 
+# Typical Mumbai area ratios relative to carpet area (approximate; builder loading varies 20-40%).
+AREA_RATIO = {"Carpet": 1.0, "Built-up": 1.20, "Super built-up": 1.35}
+
+
+# Basis of the areas in the training listings. Checked in the data: new and resale listings in the same
+# project and BHK quote almost identical areas (median ratio 1.02), and the median 1BHK is ~610 sq ft,
+# well above typical Mumbai 1BHK carpet areas, so listings are treated as super built-up throughout.
+DATA_AREA_BASIS = "Super built-up"
+
+
+def to_model_area(area, area_type, status=None, age=None):
+    """Convert the entered area to carpet, then to the basis the training listings used."""
+    carpet = area / AREA_RATIO[area_type]
+    return carpet, round(carpet * AREA_RATIO[DATA_AREA_BASIS], 1)
+
+
 eng = get_engine()
 meta = eng.meta
 subs = suburb_table().sort_values("listings", ascending=False)
@@ -91,9 +107,10 @@ with tab_value:
                                         "make the valuation much more confident.")
         c1, c2 = st.columns(2)
         bhk = c1.number_input("BHK", 1, 10, 2)
-        area = c2.number_input("Area (sq ft, as advertised)", 150, 10000, 650, step=10,
-                               help="Use the area the way property listings quote it. The training data mixes carpet "
-                                    "area (most new projects) and built-up / super built-up area (most resale flats).")
+        area = c2.number_input("Area (sq ft)", 150, 10000, 650, step=10)
+        area_type = st.radio("This area is", list(AREA_RATIO), horizontal=True,
+                             help="Carpet area is what RERA and sale agreements use. Super built-up includes "
+                                  "walls, lobbies and common areas (builder 'loading').")
         ptype = st.selectbox("Property type", ["Apartment", "Studio Apartment", "Villa", "Independent House",
                                                "Penthouse"])
         status = st.selectbox("Construction status", ["Ready to move", "Under Construction"])
@@ -115,11 +132,15 @@ with tab_value:
             st.caption("Suburbs in the data (bigger dot = more listings, redder = higher price per sq ft)")
             st.map(m, latitude="lat", longitude="lon", size="size", color="color", zoom=9)
         else:
+            carpet, model_area = to_model_area(area, area_type, status, age)
             subject = dict(region=region, project="" if project == NEW else project, bhk=int(bhk),
-                           area=float(area), type=ptype, status=status, age=age)
+                           area=float(model_area), type=ptype, status=status, age=age,
+                           carpet=carpet, area_text=f"{area:,.0f} sq ft {area_type.lower()}")
             if go:
                 st.session_state.last = subject
-            subject = st.session_state.last
+            subject = dict(st.session_state.last)
+            carpet = subject.pop("carpet")
+            area_text = subject.pop("area_text")
             v = eng.value(subject)
             lend = eng.lending_view(v, loan_l * 1e5 or None, agree_l * 1e5 or None, valuer_l * 1e5 or None)
             color, label = LIGHT_STYLE[v["light"]]
@@ -130,11 +151,14 @@ with tab_value:
                 <div style="font-size:15px;color:#666">Estimated market value</div>
                 <div style="font-size:38px;font-weight:700">{inr(v['value'])}</div>
                 <div style="font-size:17px">80% range: <b>{inr(v['low'])} – {inr(v['high'])}</b>
-                &nbsp;(±{v['half_width_pct']:.0f}%) · ₹{v['psf']:,.0f} per sq ft</div>
+                &nbsp;(±{v['half_width_pct']:.0f}%) · ₹{v['value'] / carpet:,.0f} per sq ft carpet</div>
                 <div style="font-size:19px;margin-top:8px;color:{color};font-weight:700">{label}</div>
                 <div style="font-size:15px">{lend['route']}</div></div>""", unsafe_allow_html=True)
             for w in v["warnings"]:
                 st.warning(w)
+            st.caption(f"📐 {area_text} → about {carpet:,.0f} sq ft carpet, "
+                       f"{carpet * AREA_RATIO['Super built-up']:,.0f} sq ft super built-up (typical Mumbai ratios). "
+                       f"Compared with listings on a {DATA_AREA_BASIS.lower()} basis.")
             st.caption("📈 " + meta.get("time_adjustment_note", "Prices are c.2022 listing prices."))
             acc = v["accuracy"]
             st.caption(f"In testing, {v['light']} valuations had a median error of {acc['median_abs_pct_error']}% "
@@ -183,7 +207,7 @@ with tab_value:
 <body style="font-family:Arial;max-width:800px;margin:auto">
 <h2>PropVal AI – Automated valuation report</h2>
 <p>Generated {dt.datetime.now():%d %b %Y %H:%M} · Model trained on {meta['n_listings']:,} listings</p>
-<h3>Property</h3><p>{bhk} BHK {html.escape(ptype)}, {area:,.0f} sq ft, {html.escape(subject['project'] or 'project not specified')},
+<h3>Property</h3><p>{bhk} BHK {html.escape(ptype)}, {html.escape(area_text)} (≈ {carpet:,.0f} sq ft carpet), {html.escape(subject['project'] or 'project not specified')},
 {html.escape(region)} · {html.escape(status)} · {html.escape(age)}</p>
 <h3>Valuation</h3><p><b>{inr(v['value'])}</b> (80% range {inr(v['low'])} – {inr(v['high'])}; 90% lower bound {inr(v['low90'])})<br>
 Confidence: <b>{v['light']}</b> – {html.escape(lend['route'])}</p>
