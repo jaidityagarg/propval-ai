@@ -1,0 +1,147 @@
+region,lat,lon,zone
+Thane West,19.2183,72.9781,Thane
+Thane East,19.1860,72.9820,Thane
+Mira Road East,19.2813,72.8700,Mira-Bhayandar
+Dombivali,19.2180,73.0870,Kalyan-Dombivli
+Kandivali East,19.2050,72.8700,Western Suburbs
+Kandivali West,19.2070,72.8400,Western Suburbs
+Kharghar,19.0470,73.0700,Navi Mumbai
+Andheri West,19.1360,72.8270,Western Suburbs
+Andheri East,19.1150,72.8690,Western Suburbs
+Kalyan West,19.2430,73.1300,Kalyan-Dombivli
+Kalyan East,19.2300,73.1500,Kalyan-Dombivli
+Virar,19.4550,72.8120,Vasai-Virar
+Mulund West,19.1720,72.9500,Eastern Suburbs
+Mulund East,19.1700,72.9620,Eastern Suburbs
+Panvel,18.9890,73.1170,Panvel-Raigad
+Chembur,19.0620,72.9000,Eastern Suburbs
+Powai,19.1180,72.9060,Eastern Suburbs
+Ulwe,18.9700,73.0250,Navi Mumbai
+Kanjurmarg,19.1300,72.9320,Eastern Suburbs
+Malad West,19.1870,72.8400,Western Suburbs
+Malad East,19.1860,72.8580,Western Suburbs
+Borivali East,19.2290,72.8650,Western Suburbs
+Borivali West,19.2320,72.8450,Western Suburbs
+Vikhroli,19.1100,72.9280,Eastern Suburbs
+Ghatkopar East,19.0790,72.9080,Eastern Suburbs
+Ghatkopar West,19.0900,72.9050,Eastern Suburbs
+Taloja,19.0670,73.1200,Navi Mumbai
+Wadala,19.0170,72.8580,Island City
+Goregaon West,19.1640,72.8430,Western Suburbs
+Goregaon East,19.1650,72.8620,Western Suburbs
+Naigaon East,19.3510,72.8600,Vasai-Virar
+Dahisar,19.2500,72.8600,Western Suburbs
+Bhayandar East,19.3050,72.8570,Mira-Bhayandar
+Bhayandar West,19.3000,72.8400,Mira-Bhayandar
+Ambernath East,19.2000,73.1920,Ambernath-Badlapur
+Ambernath West,19.1900,73.1800,Ambernath-Badlapur
+Kamothe,19.0200,73.0950,Navi Mumbai
+Bhiwandi,19.2960,73.0630,Bhiwandi
+Vasai,19.3850,72.8300,Vasai-Virar
+Bhandup West,19.1450,72.9370,Eastern Suburbs
+Bhandup East,19.1430,72.9450,Eastern Suburbs
+Badlapur East,19.1630,73.2430,Ambernath-Badlapur
+Badlapur West,19.1550,73.2250,Ambernath-Badlapur
+Karjat,18.9100,73.3260,Panvel-Raigad
+Jogeshwari West,19.1380,72.8400,Western Suburbs
+Jogeshwari East,19.1370,72.8600,Western Suburbs
+Santacruz East,19.0810,72.8530,Western Suburbs
+Santacruz West,19.0820,72.8360,Western Suburbs
+Ghansoli,19.1200,73.0030,Navi Mumbai
+Seawoods,19.0200,73.0180,Navi Mumbai
+Kurla,19.0720,72.8820,Eastern Suburbs
+Sion,19.0400,72.8620,Island City
+Lower Parel,18.9960,72.8300,Island City
+Nala Sopara,19.4180,72.8180,Vasai-Virar
+Byculla,18.9770,72.8330,Island City
+Airoli,19.1580,72.9980,Navi Mumbai
+Koper Khairane,19.1030,73.0100,Navi Mumbai
+Bandra East,19.0600,72.8450,Western Suburbs
+Bandra West,19.0590,72.8300,Western Suburbs
+Neral,19.0270,73.3180,Panvel-Raigad
+Sanpada,19.0620,73.0100,Navi Mumbai
+Nerul,19.0330,73.0180,Navi Mumbai
+Worli,19.0100,72.8180,Island City
+Kalamboli,19.0300,73.1000,Navi Mumbai
+Shil Phata,19.1500,73.0400,Thane
+Parel,19.0030,72.8400,Island City
+Anjurdive,19.2480,73.0200,Bhiwandi
+Karanjade,18.9900,73.1000,Panvel-Raigad
+Boisar,19.8000,72.7500,Palghar
+Palghar,19.6970,72.7650,Palghar
+Prabhadevi,19.0160,72.8280,Island City
+Juhu,19.1030,72.8270,Western Suburbs
+Mahalaxmi,18.9820,72.8240,Island City
+Ville Parle East,19.1000,72.8500,Western Suburbs
+Ville Parle West,19.1030,72.8370,Western Suburbs
+Deonar,19.0500,72.9100,Eastern Suburbs
+Titwala,19.2970,73.2050,Kalyan-Dombivli
+Dadar East,19.0190,72.8480,Island City
+Dadar West,19.0200,72.8400,Island City
+Vashi,19.0770,72.9990,Navi Mumbai
+Dronagiri,18.8800,72.9500,Panvel-Raigad
+Matunga,19.0270,72.8520,Island City
+Nahur East,19.1550,72.9450,Eastern Suburbs
+Khar,19.0700,72.8360,Western Suburbs
+Khopoli,18.7880,73.3430,Panvel-Raigad
+Bandra Kurla Complex,19.0660,72.8680,Western Suburbs
+Rasayani,18.9000,73.1700,Panvel-Raigad
+Agripada,18.9750,72.8250,Island City
+Mahim,19.0400,72.8400,Island City
+Sewri,18.9980,72.8550,Island City
+Mazagaon,18.9660,72.8450,Island City
+Diva,19.1850,73.0450,Thane
+Marine Lines,18.9450,72.8230,Island City
+Ulhasnagar,19.2180,73.1630,Ambernath-Badlapur
+Girgaon,18.9540,72.8150,Island City
+Belapur,19.0200,73.0400,Navi Mumbai
+Nilje Gaon,19.1550,73.0800,Kalyan-Dombivli
+Colaba,18.9070,72.8150,Island City
+Umroli,19.7150,72.7800,Palghar
+Juinagar,19.0520,73.0160,Navi Mumbai
+Tardeo,18.9700,72.8140,Island City
+Napeansea Road,18.9580,72.8030,Island City
+Kasheli,19.2350,73.0100,Bhiwandi
+Patlipada,19.2400,72.9750,Thane
+Kalwa,19.2000,72.9980,Thane
+Vangani,19.1400,73.2900,Ambernath-Badlapur
+Saphale,19.5780,72.8200,Palghar
+Koproli,18.9900,73.1200,Panvel-Raigad
+Vasind,19.4080,73.2680,Shahapur
+Cuffe Parade,18.9130,72.8200,Island City
+Maneklal Estate,19.0930,72.9000,Eastern Suburbs
+Rabale,19.1400,73.0030,Navi Mumbai
+Palava,19.1620,73.0800,Kalyan-Dombivli
+Manpada,19.2360,72.9710,Thane
+Ambivali,19.2650,73.1700,Kalyan-Dombivli
+Shahapur,19.4530,73.3300,Shahapur
+Kewale,19.0000,73.1500,Panvel-Raigad
+Vichumbe,19.0000,73.1150,Panvel-Raigad
+Naupada,19.1930,72.9700,Thane
+Fort,18.9330,72.8350,Island City
+Navade,19.0450,73.1100,Navi Mumbai
+Hiranandani Estates,19.2550,72.9730,Thane
+Khardi,19.5780,73.3980,Shahapur
+Peddar Road,18.9680,72.8080,Island City
+Owale,19.2700,72.9650,Thane
+Mumbai Central,18.9700,72.8200,Island City
+Kalher,19.2400,73.0200,Bhiwandi
+Babulnath Road,18.9580,72.8080,Island City
+Dharavi,19.0400,72.8550,Island City
+Tilak Nagar,19.0650,72.8930,Eastern Suburbs
+Mahavir Nagar,19.2080,72.8330,Western Suburbs
+Panch Pakhdi,19.1950,72.9750,Thane
+Asangaon,19.4400,73.3050,Shahapur
+Govandi,19.0550,72.9150,Eastern Suburbs
+Shelu,19.0000,73.3000,Panvel-Raigad
+Malabar Hill,18.9550,72.8000,Island City
+Ghodbunder Road,19.2550,72.9700,Thane
+Chandivali,19.1100,72.8980,Eastern Suburbs
+Mumbra,19.1750,73.0200,Thane
+Versova,19.1350,72.8150,Western Suburbs
+Uran,18.8770,72.9390,Panvel-Raigad
+Pen,18.7370,73.0960,Panvel-Raigad
+Uttan,19.2900,72.7950,Mira-Bhayandar
+Pali Hill,19.0680,72.8260,Western Suburbs
+Churchgate,18.9350,72.8270,Island City
+Antop Hill,19.0250,72.8650,Island City
