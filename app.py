@@ -8,7 +8,14 @@ import html
 import pandas as pd
 import streamlit as st
 
-from engine import ROOT, ValuationEngine, inr, load_regions, market_check
+import importlib
+
+import engine as _engine
+
+# Streamlit Cloud reruns app.py after a git push but can keep the old engine module in memory;
+# reloading it makes sure app.py and engine.py always come from the same version.
+importlib.reload(_engine)
+from engine import ROOT, ValuationEngine, inr, load_regions, market_check  # noqa: E402
 
 st.set_page_config(page_title="PropVal AI – Digital Property Valuation", page_icon="🏠", layout="wide")
 
