@@ -3,7 +3,6 @@
 Run locally:  streamlit run app.py
 """
 import datetime as dt
-import html
 
 import pandas as pd
 import streamlit as st
@@ -16,8 +15,12 @@ import engine as _engine
 # reloading it makes sure app.py and engine.py always come from the same version.
 importlib.reload(_engine)
 from engine import ROOT, ValuationEngine, inr, load_regions, market_check  # noqa: E402
+import report as _report  # noqa: E402
 
-st.set_page_config(page_title="PropVal AI – Digital Property Valuation", page_icon="🏠", layout="wide")
+importlib.reload(_report)
+
+st.set_page_config(page_title="PropVal AI – Digital Property Valuation", page_icon=str(ROOT / "assets" / "icon.png"),
+                   layout="wide")
 
 LIGHT_STYLE = {
     "GREEN": ("#1b873f", "🟢 GREEN – high confidence"),
@@ -90,7 +93,7 @@ eng = get_engine()
 meta = eng.meta
 subs = suburb_table().sort_values("listings", ascending=False)
 
-st.title("🏠 PropVal AI")
+st.image(str(ROOT / "assets" / "logo.png"), width=360)
 st.caption("AI-powered digital property valuation for home loans · Prototype for the Hero Housing Fintech "
            "Challenge, Problem Statement 1")
 
@@ -195,7 +198,11 @@ with tab_value:
             st.caption(f"🔖 Model version {meta.get('model_version', '1.0')}, trained {meta.get('trained_on', '')}; valued {dt.datetime.now():%d %b %Y %H:%M}. Recorded on the downloadable report for audit.")
             st.caption("📈 " + meta.get("time_adjustment_note", "Prices are c.2022 listing prices."))
             kf = market_check(subject["region"])
+            kf_text = ""
             if kf:
+                kf_text = (f"Knight Frank India Real Estate report, January–June 2026: {kf['location']} averages "
+                           f"₹{kf['psf_low']:,.0f}–{kf['psf_high']:,.0f} per sq ft ({kf['change_12m_pct']:+.0f}% in 12 months); "
+                           f"this estimate ₹{v['value'] / subject['area']:,.0f} per sq ft super built-up. A sense check only.")
                 st.info(f"**Market check** – Knight Frank India Real Estate report, January–June 2026: "
                         f"{kf['location']} averages ₹{kf['psf_low']:,.0f}–{kf['psf_high']:,.0f} per sq ft "
                         f"({kf['change_12m_pct']:+.0f}% in 12 months). This estimate: "
@@ -242,25 +249,13 @@ with tab_value:
             for n in lend["regulatory"] + lend["notes"]:
                 st.write("• " + n)
 
-            # Downloadable report
-            rows = "".join(f"<tr><td>{html.escape(f)}</td><td>{e:+.1f}%</td></tr>" for f, e in v["effects"])
-            notes = "".join(f"<li>{html.escape(n)}</li>" for n in lend["regulatory"] + lend["notes"] + v["warnings"])
-            report = f"""<html><head><meta charset="utf-8"><title>Valuation report</title></head>
-<body style="font-family:Arial;max-width:800px;margin:auto">
-<h2>PropVal AI – Automated valuation report</h2>
-<p>Valuation date: {dt.datetime.now():%d %b %Y %H:%M} · Model version {meta.get('model_version', '1.0')}, trained {meta.get('trained_on', '')} on {meta['n_listings']:,} listings · Settings: green within ±{meta['green_max_halfwidth']:.0%}, amber within ±{meta['amber_max_halfwidth']:.0%}, price index factor {meta.get('time_adjustment', 1.0)}</p>
-<h3>Property</h3><p>{bhk} BHK {html.escape(ptype)}, {html.escape(area_text)} (≈ {carpet:,.0f} sq ft carpet), {html.escape(subject['project'] or 'project not specified')},
-{html.escape(region)} · {html.escape(status)} · {html.escape(age)}</p>
-<h3>Valuation</h3><p><b>{inr(v['value'])}</b> (80% range {inr(v['low'])} – {inr(v['high'])}; 90% lower bound {inr(v['low90'])})<br>
-Confidence: <b>{v['light']}</b> – {html.escape(lend['route'])}</p>
-<h3>Main factors</h3><table border=1 cellpadding=4>{rows}</table>
-<h3>Comparables</h3>{comps.to_html(index=False)}
-<h3>Lending</h3><p>Collateral value used: {inr(lend['collateral'])} ({html.escape(lend['basis'])}).
-Maximum loan under RBI LTV caps: {inr(lend['max_loan'])}.</p><ul>{notes}</ul>
-<p style="color:#888">Prototype. Based on listing prices from two public Kaggle datasets (c. 2022–2024), not registered sale prices. {html.escape(meta.get('time_adjustment_note', ''))}. Not a substitute for a
-valuation by a registered valuer.</p></body></html>"""
-            st.download_button("⬇ Download valuation report", report, file_name="valuation_report.html",
-                               mime="text/html")
+            # Downloadable PDF report
+            prop = dict(project=subject["project"], region=subject["region"], bhk=subject["bhk"],
+                        type=subject["type"], status=subject["status"], age=subject["age"],
+                        area_text=area_text, carpet=carpet, market_check=kf_text)
+            pdf, ref = _report.build_pdf(v, lend, prop, comps, meta)
+            st.download_button("⬇ Download valuation report (PDF)", pdf, file_name=f"PropVal_{ref}.pdf",
+                               mime="application/pdf", type="primary")
 
 # ------------------------------------------------------------------ ACCURACY
 with tab_acc:
