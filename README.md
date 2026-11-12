@@ -1,5 +1,9 @@
 # PropVal AI – Digital Property Valuation Engine
 
+![PropVal AI](assets/logo.png)
+
+**Live app: https://propval-ai.streamlit.app/**
+
 Prototype for the **Hero Housing Fintech Challenge, Problem Statement 1** (AI-Powered Digital Property Valuation Engine for India).
 
 Enter a flat's details. The app returns:
