@@ -22,20 +22,24 @@ LANDMARKS = {
     "dist_vashi_km": (19.0770, 72.9990),           # Navi Mumbai hub
 }
 
-CATEGORICAL = ["type", "status", "age", "region", "zone"]
+CATEGORICAL = ["type", "status", "age", "region", "zone", "furnished"]
 RAIL = ["dist_rail_km", "rail_stations_within_3km"]
-NUMERIC = ["bhk", "area", "log_area", "area_per_bhk", "lat", "lon"] + list(LANDMARKS) + RAIL
+NUMERIC = (["bhk", "area", "log_area", "area_per_bhk", "lat", "lon", "loc_precise"] + list(LANDMARKS) + RAIL
+           + ["age_years", "bathrooms"])
+OPTIONAL = {"age_years": np.nan, "bathrooms": np.nan, "furnished": np.nan, "loc_precise": 0}
 FEATURES = NUMERIC + CATEGORICAL
 
 # Friendly names for explanations (groups of model features).
 FEATURE_GROUPS = {
-    "Location (suburb, distance to job hubs)": ["region", "zone", "lat", "lon"] + list(LANDMARKS),
+    "Location (suburb, map position, distance to job hubs)": ["region", "zone", "lat", "lon", "loc_precise"]
+    + list(LANDMARKS),
     "Rail connectivity (nearest local station)": RAIL,
     "Size (area)": ["area", "log_area"],
     "Layout (BHK, area per room)": ["bhk", "area_per_bhk"],
     "Property type": ["type"],
     "Construction status": ["status"],
-    "New vs resale": ["age"],
+    "New vs resale, building age": ["age", "age_years"],
+    "Bathrooms and furnishing": ["bathrooms", "furnished"],
 }
 
 # RBI loan-to-value caps for individual housing loans.
@@ -56,6 +60,14 @@ def haversine_km(lat1, lon1, lat2, lon2):
 def load_stations():
     """Mumbai-region suburban railway stations (DataMeet Indian Railways open data)."""
     return pd.read_csv(DATA / "rail_stations.csv")
+
+
+def market_check(region):
+    """Knight Frank India Real Estate H1 2026 price range for the suburb, if the report covers it."""
+    kf = pd.read_csv(DATA / "knight_frank_h1_2026.csv")
+    r = str(region).lower()
+    hit = kf[[r.startswith(m.lower()) for m in kf.region_match]]
+    return None if hit.empty else hit.iloc[0].to_dict()
 
 
 def load_regions():
@@ -117,16 +129,27 @@ def clean(raw: pd.DataFrame) -> pd.DataFrame:
     df = df[(df.psf > med / 3) & (df.psf < med * 3)]
     df = df.merge(regions, on="region", how="left")
     df = df.rename(columns={"locality": "project"})
+    for c, v in OPTIONAL.items():
+        df[c] = v
+    df["source"] = "kaggle_76k"
     df = df.reset_index(drop=True)
     return df
 
 
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
-    out = df.copy()
-    if "zone" not in out or out["zone"].isna().any() or "lat" not in out:
-        regions = load_regions()
-        out = out.drop(columns=[c for c in ["lat", "lon", "zone"] if c in out]).merge(
-            regions, on="region", how="left")
+    out = df.copy().reset_index(drop=True)
+    for c, v in OPTIONAL.items():
+        if c not in out:
+            out[c] = v
+    for c in ["lat", "lon", "zone"]:
+        if c not in out:
+            out[c] = np.nan
+    # Missing map position or zone: use the suburb's centre.
+    cen = out[["region"]].merge(load_regions(), on="region", how="left")
+    for c in ["lat", "lon", "zone"]:
+        out[c] = out[c].where(out[c].notna(), cen[c])
+    out["lat"] = out["lat"].astype(float)
+    out["lon"] = out["lon"].astype(float)
     out["log_area"] = np.log(out["area"])
     out["area_per_bhk"] = out["area"] / out["bhk"].clip(lower=1)
     for col, (la, lo) in LANDMARKS.items():
@@ -179,7 +202,7 @@ class ValuationEngine:
         self.meta = json.loads((artifacts / "meta.json").read_text())
         self.model = lgb.Booster(model_file=str(artifacts / "model.txt"))
         self.scale_model = lgb.Booster(model_file=str(artifacts / "scale_model.txt"))
-        self.comps = pd.read_csv(artifacts / "comparables.csv.gz")
+        self.comps = pd.read_csv(artifacts / "comparables.csv.gz", dtype={"status": str, "furnished": str})
         self.regions = load_regions()
 
     # ---------- comparable sales ----------
@@ -202,8 +225,23 @@ class ValuationEngine:
         return top, len(same)
 
     # ---------- main valuation ----------
+    def project_location(self, region, project):
+        """Median map position of a known project's listings (None if not precisely known)."""
+        if not project or "lat" not in self.comps:
+            return None
+        p = self.comps[(self.comps.region == region) & (self.comps.project.str.lower() == project.strip().lower())
+                       & (self.comps.loc_precise == 1)]
+        if p.empty:
+            return None
+        return float(p.lat.median()), float(p.lon.median())
+
     def value(self, subject: dict):
         m = self.meta
+        subject = dict(subject)
+        if "lat" not in subject:
+            loc = self.project_location(subject["region"], subject.get("project"))
+            if loc:
+                subject["lat"], subject["lon"], subject["loc_precise"] = loc[0], loc[1], 1
         row = pd.DataFrame([subject])
         feats = add_features(row)
         X = set_categories(feats[FEATURES], m["categories"])

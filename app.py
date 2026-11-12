@@ -8,7 +8,7 @@ import html
 import pandas as pd
 import streamlit as st
 
-from engine import ROOT, ValuationEngine, inr, load_regions
+from engine import ROOT, ValuationEngine, inr, load_regions, market_check
 
 st.set_page_config(page_title="PropVal AI – Digital Property Valuation", page_icon="🏠", layout="wide")
 
@@ -107,7 +107,7 @@ with tab_value:
                 choice = st.selectbox("Matching buildings", labels + [NONE])
             else:
                 hits = similar
-                st.warning(f"'{query.strip()}' is not in the data (it may be newer than 2022). "
+                st.warning(f"'{query.strip()}' is not in the data (it may be newer than the data). "
                            "Choose its real suburb below; the building will be valued as a new project.")
                 labels = [f"{r.project} — {r.region} ({r.n} listings)" for r in hits.itertuples()]
                 choice = st.selectbox("Similar names (only pick one if it is the same building)",
@@ -133,6 +133,11 @@ with tab_value:
                                                "Penthouse"])
         status = st.selectbox("Construction status", ["Ready to move", "Under Construction"])
         age = st.selectbox("New or resale", ["Resale", "New", "Unknown"])
+        with st.expander("More details (optional, improve accuracy a little)"):
+            NS = "Not sure"
+            age_y = st.selectbox("Building age (years)", [NS] + list(range(0, 41)))
+            baths = st.selectbox("Bathrooms", [NS] + list(range(1, 7)))
+            furn = st.selectbox("Furnishing", [NS, "Unfurnished", "Semi-Furnished", "Furnished"])
 
         st.subheader("Loan details (optional)")
         loan_l = st.number_input("Loan requested (₹ lakh)", 0.0, 10000.0, 0.0, step=5.0)
@@ -153,6 +158,9 @@ with tab_value:
             carpet, model_area = to_model_area(area, area_type, status, age)
             subject = dict(region=region, project="" if project == NEW else project, bhk=int(bhk),
                            area=float(model_area), type=ptype, status=status, age=age,
+                           age_years=float("nan") if age_y == NS else float(age_y),
+                           bathrooms=float("nan") if baths == NS else float(baths),
+                           furnished=float("nan") if furn == NS else furn,
                            carpet=carpet, area_text=f"{area:,.0f} sq ft {area_type.lower()}")
             if go:
                 st.session_state.last = subject
@@ -179,6 +187,14 @@ with tab_value:
                        f"Compared with listings on a {DATA_AREA_BASIS.lower()} basis.")
             st.caption(f"🔖 Model version {meta.get('model_version', '1.0')}, trained {meta.get('trained_on', '')}; valued {dt.datetime.now():%d %b %Y %H:%M}. Recorded on the downloadable report for audit.")
             st.caption("📈 " + meta.get("time_adjustment_note", "Prices are c.2022 listing prices."))
+            kf = market_check(subject["region"])
+            if kf:
+                st.info(f"**Market check** – Knight Frank India Real Estate report, January–June 2026: "
+                        f"{kf['location']} averages ₹{kf['psf_low']:,.0f}–{kf['psf_high']:,.0f} per sq ft "
+                        f"({kf['change_12m_pct']:+.0f}% in 12 months). This estimate: "
+                        f"₹{v['value'] / subject['area']:,.0f} per sq ft super built-up. Knight Frank does not state "
+                        "its area basis, and its averages for premium areas follow premium projects, so use this "
+                        "as a sense check, not a second valuation.")
             acc = v["accuracy"]
             st.caption(f"In testing, {v['light']} valuations had a median error of {acc['median_abs_pct_error']}% "
                        f"and {acc['within_10pct']}% were within ±10% of the actual price.")
@@ -201,11 +217,11 @@ with tab_value:
 
             st.subheader("Comparable listings")
             comps = v["comps"][["project", "bhk", "area", "price_inr", "psf", "status", "age", "adjusted_value"]].copy()
-            comps.columns = ["Project", "BHK", "Area (sq ft)", "Listed price (2022)", "₹ per sq ft (2022)", "Status",
+            comps.columns = ["Project", "BHK", "Area (sq ft)", "Listed price (2022 level)", "₹ per sq ft (2022 level)", "Status",
                              "New/Resale", "Implied value for this flat (today)"]
-            comps["Listed price (2022)"] = comps["Listed price (2022)"].map(inr)
+            comps["Listed price (2022 level)"] = comps["Listed price (2022 level)"].map(inr)
             comps["Implied value for this flat (today)"] = comps["Implied value for this flat (today)"].map(inr)
-            comps["₹ per sq ft (2022)"] = comps["₹ per sq ft (2022)"].map(lambda x: f"{x:,.0f}")
+            comps["₹ per sq ft (2022 level)"] = comps["₹ per sq ft (2022 level)"].map(lambda x: f"{x:,.0f}")
             st.dataframe(comps, hide_index=True, width="stretch")
             st.caption(f"{v['n_same_project']} listings found in the same project." if v["n_same_project"]
                        else "No listings from the same project; comparables are similar flats in the same suburb.")
@@ -234,7 +250,7 @@ Confidence: <b>{v['light']}</b> – {html.escape(lend['route'])}</p>
 <h3>Comparables</h3>{comps.to_html(index=False)}
 <h3>Lending</h3><p>Collateral value used: {inr(lend['collateral'])} ({html.escape(lend['basis'])}).
 Maximum loan under RBI LTV caps: {inr(lend['max_loan'])}.</p><ul>{notes}</ul>
-<p style="color:#888">Prototype. Based on listing prices (c. 2022), not registered sale prices. {html.escape(meta.get('time_adjustment_note', ''))}. Not a substitute for a
+<p style="color:#888">Prototype. Based on listing prices from two public Kaggle datasets (c. 2022–2024), not registered sale prices. {html.escape(meta.get('time_adjustment_note', ''))}. Not a substitute for a
 valuation by a registered valuer.</p></body></html>"""
             st.download_button("⬇ Download valuation report", report, file_name="valuation_report.html",
                                mime="text/html")
@@ -242,16 +258,22 @@ valuation by a registered valuer.</p></body></html>"""
 # ------------------------------------------------------------------ ACCURACY
 with tab_acc:
     st.markdown((ROOT / "reports" / "accuracy.md").read_text())
+    for extra in ["external_test.md", "validation_99acres.md"]:
+        p = ROOT / "reports" / extra
+        if p.exists():
+            st.divider()
+            st.markdown(p.read_text())
 
 # ------------------------------------------------------------------ HOW
 with tab_how:
     st.markdown(f"""
 ### How PropVal AI values a property
 1. **Data**: {meta['n_listings']:,} cleaned listings across {meta['n_regions']} suburbs and {meta['n_projects']:,}
-   projects in the Mumbai Metropolitan Region, plus suburb coordinates, distances to the main job hubs
+   projects in the Mumbai Metropolitan Region, merged from two public Kaggle datasets. {meta.get('share_precise_location', 0):.0f}% of
+   listings have the building's own map position (the rest use the suburb centre). Plus distances to the main job hubs
    (Nariman Point, BKC, Powai, Vashi) and to the nearest of 112 suburban railway stations (DataMeet open data).
 2. **ML model**: a gradient-boosting model (LightGBM) predicts the price per sq ft from location, size, layout,
-   type, construction status and new/resale.
+   type, construction status, new/resale and, when known, building age, bathrooms and furnishing.
 3. **Comparables**: if the same project has other listings, their prices are blended in
    ({meta['blend_weight']:.0%} weight), the way a valuer uses recent sales in the same building.
 4. **Confidence range**: a second model predicts how uncertain each valuation is, and *conformal prediction*
@@ -265,7 +287,10 @@ with tab_how:
 
 **Price update**: {meta.get('time_adjustment_note', '')}. Source: RBI press release, 29 May 2026.
 
-**Limitations**: listing (asking) prices from about 2022, updated with a single all-India index (city-level indices for Mumbai and Thane are on RBI's DBIE portal and would be more precise), not registered sale prices; suburb-level coordinates;
+**Market check**: for 20 locations the app also shows the January–June 2026 price range from Knight Frank's
+India Real Estate report, as an independent sense check.
+
+**Limitations**: listing (asking) prices from about 2022–2024, updated with a single all-India index (city-level indices for Mumbai and Thane are on RBI's DBIE portal and would be more precise), not registered sale prices;
 Mumbai region only. The production roadmap replaces listings with registered transaction data (IGR) and the
 lender's own valuation reports, adds satellite and infrastructure features, and extends city by city.
 """)

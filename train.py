@@ -13,6 +13,7 @@ import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 from engine import ARTIFACTS, CATEGORICAL, DATA, FEATURES, ROOT, add_features, clean, set_categories
+from source2 import RAW2, clean_source2, combine
 
 RAW = DATA / "Mumbai_House_Prices.csv"
 SEED = 42
@@ -25,7 +26,7 @@ SCALE_PARAMS = dict(objective="regression_l1", learning_rate=0.05, num_leaves=31
 MIN_PROJECT_COMPS = 3
 GREEN_MAX, AMBER_MAX = 0.15, 0.25  # 80%-range half-width limits for each light (a lender policy setting)
 TIME_ADJUSTMENT = 1.159  # RBI All-India House Price Index: 100 (2022-23 base) -> 115.9 (Q4 2025-26)
-MODEL_VERSION = "1.1"
+MODEL_VERSION = "2.0"
 TIME_ADJUSTMENT_NOTE = "Updated from c.2022 to 2026 prices using the RBI All-India House Price Index (2022-23 = 100; Q4 2025-26 = 115.9)"
 
 
@@ -45,9 +46,15 @@ def metrics(pred, actual):
 
 def main():
     raw = pd.read_csv(RAW)
-    df = clean(raw)
+    s1 = clean(raw)
     # Same unit posted more than once with tiny differences: keep one.
-    df = df.drop_duplicates(subset=["project", "region", "bhk", "area", "price_inr"]).reset_index(drop=True)
+    s1 = s1.drop_duplicates(subset=["project", "region", "bhk", "area", "price_inr"]).reset_index(drop=True)
+    rep2 = {}
+    s2 = clean_source2(pd.read_csv(RAW2), rep2)
+    s2 = s2.drop_duplicates(subset=["project", "region", "bhk", "area", "price_inr"]).reset_index(drop=True)
+    rep2["after_repost_dedupe"] = len(s2)
+    df, level = combine(s1, s2, rep2)
+    print("source 2 cleaning:", rep2)
     df = add_features(df)
     df["y"] = np.log(df.psf)
     cats = {c: [str(v) for v in df[c].astype(str).unique()] for c in CATEGORICAL}
@@ -157,13 +164,21 @@ def main():
         "ml_model_plus_project_comparables": metrics(blended, actual_price[te_all]),
     }
     summary["ml_model_plus_project_comparables"]["range_coverage_80"] = overall_cov
+    by_source = {}
+    for src in df.source.unique():
+        sel = te_all_mask & (df.source == src).to_numpy()
+        by_source[src] = metrics(tp[sel], actual_price[sel])
+        by_source[src]["range_coverage_80"] = round(float((resid[sel] <= half80[sel]).mean() * 100), 1)
 
     # ---- 4. Feature-group ablation: how much does location data add?
     abl = {}
-    for label, drop in [("without location & distance features",
+    for label, drop in [("all features (same settings, for comparison)", []),
+                        ("without location & distance features",
                          ["region", "zone", "lat", "lon", "dist_nariman_point_km", "dist_bkc_km",
                           "dist_powai_km", "dist_vashi_km", "dist_rail_km", "rail_stations_within_3km"]),
                         ("without rail-station features", ["dist_rail_km", "rail_stations_within_3km"]),
+                        ("without building map position (suburb centre only)", ["lat", "lon", "loc_precise"]),
+                        ("without building age, bathrooms, furnishing", ["age_years", "bathrooms", "furnished"]),
                         ("without distance-to-hub features",
                          ["dist_nariman_point_km", "dist_bkc_km", "dist_powai_km", "dist_vashi_km"])]:
         keep = [f for f in FEATURES if f not in drop]
@@ -179,9 +194,11 @@ def main():
     ARTIFACTS.mkdir(exist_ok=True)
     final.save_model(str(ARTIFACTS / "model.txt"))
     scale_model.save_model(str(ARTIFACTS / "scale_model.txt"))
-    comps_cols = ["project", "region", "bhk", "area", "price_inr", "psf", "type", "status", "age"]
+    comps_cols = ["project", "region", "bhk", "area", "price_inr", "psf", "type", "status", "age",
+                  "lat", "lon", "loc_precise", "age_years", "bathrooms", "furnished", "source"]
     out = df[comps_cols].copy()
-    for c in ["region", "type", "status", "age"]:
+    out["lat"], out["lon"] = out.lat.round(5), out.lon.round(5)
+    for c in ["region", "type", "status", "age", "furnished"]:
         out[c] = out[c].astype(str)
     out.to_csv(ARTIFACTS / "comparables.csv.gz", index=False, compression="gzip")
 
@@ -194,10 +211,13 @@ def main():
         "model_version": MODEL_VERSION, "trained_on": __import__("datetime").date.today().isoformat(), "time_adjustment": TIME_ADJUSTMENT, "time_adjustment_note": TIME_ADJUSTMENT_NOTE, "n_listings": int(len(df)),
         "n_projects": int(groups.nunique()), "n_regions": int(df.region.nunique()),
         "share_with_project_comps": round(float(has_comps.mean() * 100), 1),
+        "by_source": by_source, "source2_cleaning": rep2, "source2_price_level": level,
+        "share_precise_location": round(float(df.loc_precise.mean() * 100), 1),
+        "n_by_source": df.source.value_counts().to_dict(),
     }
     (ARTIFACTS / "meta.json").write_text(json.dumps(meta, indent=1))
     write_report(meta)
-    print(json.dumps({"summary": summary, "lights": lights, "accuracy": accuracy, "blend_weight": best_w, "ablation": abl}, indent=1))
+    print(json.dumps({"by_source": by_source, "summary": summary, "lights": lights, "accuracy": accuracy, "blend_weight": best_w, "ablation": abl}, indent=1))
 
 
 def write_report(meta):
@@ -233,11 +253,18 @@ def write_report(meta):
         lines.append(f"| {label} | {v['median_abs_pct_error']}% | {v['within_10pct']}% | "
                      f"{v['range_halfwidth_pct_median']}% | {v['range_coverage_80']}% |")
     lines += ["", "## What the location data adds (ablation, ML model only)", "",
-              "| Model | Median error | Within ±10% |", "|---|---|---|",
-              f"| Full model | {s['ml_model_only']['median_abs_pct_error']}% | {s['ml_model_only']['within_10pct']}% |"]
+              "| Model | Median error | Within ±10% |", "|---|---|---|"]
     for k, v in meta["ablation"].items():
         lines.append(f"| {k} | {v['median_abs_pct_error']}% | {v['within_10pct']}% |")
-    lines += ["", "Caveat: these are listing (asking) prices from about 2022, not registered sale prices. "
+    lines += ["", "## By data source (test projects, full engine)", "",
+              "| Source | Flats | Median error | Within ±10% | 80% range covers |", "|---|---|---|---|---|"]
+    for k, v in meta["by_source"].items():
+        name = {"kaggle_76k": "Source 1: Mumbai House Prices (76k)", "kaggle_70k": "Source 2: Mumbai House Price Data (70k)"}[k]
+        lines.append(f"| {name} | {v['n']:,} | {v['median_abs_pct_error']}% | {v['within_10pct']}% | {v['range_coverage_80']}% |")
+    lines += ["", f"Source 2 prices were {meta['source2_price_level']:.3f}× source 1 for the same project and BHK, "
+              "so they were scaled to source 1's level before training. "
+              f"{meta['share_precise_location']}% of listings have a building-level map position.",
+              "", "Caveat: these are listing (asking) prices from about 2022, not registered sale prices. "
               "The same test method should be rerun on registered transactions (IGR) and the lender's own "
               "valuation reports before production use."]
     (ROOT / "reports").mkdir(exist_ok=True)

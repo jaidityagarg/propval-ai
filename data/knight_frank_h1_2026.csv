@@ -1,0 +1,21 @@
+location,micro_market,region_match,psf_low,psf_high,change_12m_pct,change_6m_pct
+Lower Parel,Central Mumbai,Lower Parel,32671,35730,5,0
+Worli,Central Mumbai,Worli,88734,95354,2,0
+Ghatkopar,Central Suburbs,Ghatkopar,26263,27387,4,0
+Mulund,Central Suburbs,Mulund,23062,23182,2,0
+Powai,Central Suburbs,Powai,24348,31045,4,2
+Panvel,Navi Mumbai,Panvel,8899,9008,9,0
+Kharghar,Navi Mumbai,Kharghar,10500,12351,6,0
+Vashi,Navi Mumbai,Vashi,23277,23405,1,0
+Badlapur,Peripheral Central Suburbs,Badlapur,5028,5131,1,0
+Dombivali,Peripheral Central Suburbs,Dombivali,9443,9527,1,1
+Mira Road,Peripheral Western Suburbs,Mira Road,12014,12123,1,1
+Virar,Peripheral Western Suburbs,Virar,7950,8066,3,0
+Tardeo,South Mumbai,Tardeo,82510,84014,3,2
+Ghodbunder Road,Thane,Ghodbunder Road,12183,12307,1,0
+Naupada,Thane,Naupada,21774,21956,2,0
+Andheri,Western Suburbs,Andheri,26990,27862,6,1
+Bandra (W),Western Suburbs,Bandra West,81814,82709,6,1
+Borivali,Western Suburbs,Borivali,27478,28836,7,0
+Dahisar,Western Suburbs,Dahisar,16024,16138,4,1
+Goregaon,Western Suburbs,Goregaon,26078,27340,5,0

@@ -18,10 +18,15 @@ Everything is open source and free to run.
 | `app.py` | The web app (Streamlit) |
 | `engine.py` | Cleaning, features, valuation, confidence and lending logic |
 | `train.py` | Trains and tests the model, writes `artifacts/` and `reports/accuracy.md` |
-| `data/Mumbai_House_Prices.csv` | Listing data (Kaggle "Mumbai House Prices", c. 2022) |
+| `source2.py` | Cleans the second listings source and merges it with the first |
+| `data/Mumbai_House_Prices.csv` | Source 1: Kaggle "Mumbai House Prices" (76k listings, c. 2022) |
+| `data/Mumbai_House_Prices_2.csv` | Source 2: Kaggle "Mumbai House Price Data (70k entries)" with building map positions, bathrooms, furnishing, age |
+| `data/knight_frank_h1_2026.csv` | Price ranges for 20 Mumbai locations from Knight Frank's India Real Estate report, January–June 2026 (market check) |
+| `data/validation_99acres.csv` | 43 live 99acres listings collected by hand in November 2026 |
+| `analysis/` | External test on source 2 (model 1.1) and the 99acres check |
 | `data/regions.csv` | Approximate coordinates and zone for each suburb |
 | `artifacts/` | Trained models and comparables database, already built |
-| `reports/accuracy.md` | Accuracy test results |
+| `reports/` | Accuracy test, external test and 99acres check |
 
 ## Run it on your computer
 
@@ -51,7 +56,9 @@ See `reports/accuracy.md`. The test is strict: flats are scored on projects the 
 
 ## Data sources (cite these in the submission)
 
-- Mumbai House Prices dataset, Kaggle (listing prices, c. 2022).
+- Source 1: Mumbai House Prices dataset, Kaggle (listing prices, c. 2022).
+- Source 2: Mumbai House Price Data (70k entries), Kaggle, uploaded by kevinnadar22 (kaggle.com/datasets/kevinnadar22/mumbai-house-price-data-70k-entries). The page states no licence or collection date; used here for a non-commercial student prototype with credit. Its prices run about 8.6% above source 1 for the same project and BHK, so they are scaled to source 1's level before training.
+- Knight Frank, India Real Estate: Office and Residential Market, January–June 2026 (knightfrank.co.in). Only the 20 location price ranges are used, as a market check; the report itself is not copied here.
 - Suburb coordinates: approximate centroids. To refine them, look each suburb up on OpenStreetMap (openstreetmap.org) and update `data/regions.csv`, then run `python train.py` again.
 - Suburban railway stations: DataMeet Indian Railways open data (github.com/datameet/railways), 112 stations in the Mumbai region, saved in `data/rail_stations.csv`.
 - RBI All-India House Price Index, Q4 2025-26 press release (29 May 2026).
@@ -66,7 +73,7 @@ See `reports/accuracy.md`. The test is strict: flats are scored on projects the 
 
 - Asking prices, not registered sale prices.
 - Area basis: the dataset doesn't say whether areas are carpet or super built-up. New and resale listings in the same project quote the same areas, and a typical 1BHK is ~610 sq ft, so listings are treated as super built-up. The app converts whatever the user enters (carpet, built-up or super built-up) using typical Mumbai ratios of 1 : 1.20 : 1.35.
-- Suburb-level location, not exact addresses.
+- 77% of listings have the building's own map position; the rest use the suburb centre.
 - Mumbai region only.
 
 The roadmap: replace listings with registered transaction data (Maharashtra IGR) and the lender's own valuation reports; add satellite, flood-risk and metro/infrastructure features; extend city by city using the same pipeline.
