@@ -23,9 +23,9 @@ st.set_page_config(page_title="PropVal AI – Digital Property Valuation", page_
                    layout="wide")
 
 LIGHT_STYLE = {
-    "GREEN": ("#1b873f", "🟢 GREEN – high confidence"),
-    "AMBER": ("#b7791f", "🟠 AMBER – medium confidence"),
-    "RED": ("#c53030", "🔴 RED – low confidence"),
+    "GREEN": ("#2E9B5A", "🟢 GREEN – high confidence"),
+    "AMBER": ("#E39A2D", "🟠 AMBER – medium confidence"),
+    "RED": ("#C8423B", "🔴 RED – low confidence"),
 }
 
 
@@ -224,7 +224,7 @@ with tab_value:
                 x=alt.X("Effect on price (%):Q"),
                 y=alt.Y("Factor:N", sort=None, axis=alt.Axis(labelLimit=320, title=None)),
                 color=alt.Color("Direction:N", scale=alt.Scale(domain=["Raises price", "Lowers price"],
-                                                                 range=["#2f855a", "#c53030"])),
+                                                                 range=["#2E9B5A", "#C8423B"])),
                 tooltip=["Factor", alt.Tooltip("Effect on price (%):Q", format="+.1f")],
             ).properties(height=45 * len(eff) + 30)
             st.altair_chart(chart, width="stretch")
