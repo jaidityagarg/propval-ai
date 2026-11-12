@@ -177,6 +177,7 @@ with tab_value:
             st.caption(f"📐 {area_text} → about {carpet:,.0f} sq ft carpet, "
                        f"{carpet * AREA_RATIO['Super built-up']:,.0f} sq ft super built-up (typical Mumbai ratios). "
                        f"Compared with listings on a {DATA_AREA_BASIS.lower()} basis.")
+            st.caption(f"🔖 Model version {meta.get('model_version', '1.0')}, trained {meta.get('trained_on', '')}; valued {dt.datetime.now():%d %b %Y %H:%M}. Recorded on the downloadable report for audit.")
             st.caption("📈 " + meta.get("time_adjustment_note", "Prices are c.2022 listing prices."))
             acc = v["accuracy"]
             st.caption(f"In testing, {v['light']} valuations had a median error of {acc['median_abs_pct_error']}% "
@@ -224,7 +225,7 @@ with tab_value:
             report = f"""<html><head><meta charset="utf-8"><title>Valuation report</title></head>
 <body style="font-family:Arial;max-width:800px;margin:auto">
 <h2>PropVal AI – Automated valuation report</h2>
-<p>Generated {dt.datetime.now():%d %b %Y %H:%M} · Model trained on {meta['n_listings']:,} listings</p>
+<p>Valuation date: {dt.datetime.now():%d %b %Y %H:%M} · Model version {meta.get('model_version', '1.0')}, trained {meta.get('trained_on', '')} on {meta['n_listings']:,} listings · Settings: green within ±{meta['green_max_halfwidth']:.0%}, amber within ±{meta['amber_max_halfwidth']:.0%}, price index factor {meta.get('time_adjustment', 1.0)}</p>
 <h3>Property</h3><p>{bhk} BHK {html.escape(ptype)}, {html.escape(area_text)} (≈ {carpet:,.0f} sq ft carpet), {html.escape(subject['project'] or 'project not specified')},
 {html.escape(region)} · {html.escape(status)} · {html.escape(age)}</p>
 <h3>Valuation</h3><p><b>{inr(v['value'])}</b> (80% range {inr(v['low'])} – {inr(v['high'])}; 90% lower bound {inr(v['low90'])})<br>

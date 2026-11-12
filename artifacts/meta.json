@@ -446,5 +446,7 @@
  "n_listings": 54465,
  "n_projects": 9717,
  "n_regions": 146,
- "share_with_project_comps": 80.8
+ "share_with_project_comps": 80.8,
+ "model_version": "1.1",
+ "trained_on": "2026-11-12"
 }
