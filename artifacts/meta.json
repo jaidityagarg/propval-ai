@@ -182,24 +182,24 @@
  },
  "conformal": {
   "sigma_edges": [
-   0.0753174938221349,
-   0.10142896648070318,
-   0.1259919962212123,
-   0.16208019845917926
+   0.07505365006869028,
+   0.10075644893707289,
+   0.12423198016158214,
+   0.16107768707310963
   ],
   "q80": [
-   2.352422500215735,
-   2.0343881421461085,
-   1.944677337619274,
-   1.7135687150128376,
-   1.5649037289502972
+   2.2947280771303586,
+   2.125681328515642,
+   1.9815509897685275,
+   1.773784537027981,
+   1.558049873729767
   ],
   "q90": [
-   3.5112780366119365,
-   2.9154278439917194,
-   2.775223606253751,
-   2.306214806742983,
-   2.0538359120670804
+   3.540978041030431,
+   2.9874567884652667,
+   2.7490224682750877,
+   2.382250298108594,
+   2.0914888136016407
   ]
  },
  "accuracy": {
@@ -209,15 +209,15 @@
    "within_10pct": 51.2,
    "within_20pct": 75.6,
    "range_coverage_80": 80.5,
-   "range_halfwidth_pct_median": 24.1
+   "range_halfwidth_pct_median": 24.7
   },
   "no_project_comps": {
    "n": 5138,
-   "median_abs_pct_error": 13.4,
-   "within_10pct": 39.8,
-   "within_20pct": 67.0,
-   "range_coverage_80": 74.7,
-   "range_halfwidth_pct_median": 26.5
+   "median_abs_pct_error": 13.2,
+   "within_10pct": 40.4,
+   "within_20pct": 67.1,
+   "range_coverage_80": 75.3,
+   "range_halfwidth_pct_median": 27.2
   }
  },
  "summary": {
@@ -231,14 +231,14 @@
    "n": 27899,
    "median_abs_pct_error": 11.9,
    "within_10pct": 43.5,
-   "within_20pct": 71.4
+   "within_20pct": 71.3
   },
   "ml_model_plus_project_comparables": {
    "n": 27899,
    "median_abs_pct_error": 10.3,
-   "within_10pct": 49.1,
-   "within_20pct": 74.0,
-   "range_coverage_80": 79.4
+   "within_10pct": 49.2,
+   "within_20pct": 74.1,
+   "range_coverage_80": 79.5
   }
  },
  "ablation": {
@@ -248,36 +248,42 @@
    "within_10pct": 19.2,
    "within_20pct": 35.1
   },
-  "without distance-to-hub features": {
+  "without rail-station features": {
    "n": 27899,
    "median_abs_pct_error": 11.8,
+   "within_10pct": 43.7,
+   "within_20pct": 71.3
+  },
+  "without distance-to-hub features": {
+   "n": 27899,
+   "median_abs_pct_error": 11.9,
    "within_10pct": 43.8,
-   "within_20pct": 71.4
+   "within_20pct": 71.6
   }
  },
  "traffic_lights": {
   "GREEN": {
-   "n": 2431,
-   "median_abs_pct_error": 4.6,
-   "within_10pct": 77.6,
-   "within_20pct": 92.6,
-   "share_pct": 8.7,
-   "range_coverage_80": 79.4
+   "n": 2886,
+   "median_abs_pct_error": 4.8,
+   "within_10pct": 76.9,
+   "within_20pct": 92.7,
+   "share_pct": 10.3,
+   "range_coverage_80": 78.2
   },
   "AMBER": {
-   "n": 12220,
+   "n": 10731,
    "median_abs_pct_error": 8.5,
-   "within_10pct": 55.9,
-   "within_20pct": 81.6,
-   "share_pct": 43.8,
-   "range_coverage_80": 79.5
+   "within_10pct": 56.0,
+   "within_20pct": 81.5,
+   "share_pct": 38.5,
+   "range_coverage_80": 80.0
   },
   "RED": {
-   "n": 13248,
-   "median_abs_pct_error": 14.5,
-   "within_10pct": 37.5,
-   "within_20pct": 63.5,
-   "share_pct": 47.5,
+   "n": 14282,
+   "median_abs_pct_error": 14.0,
+   "within_10pct": 38.5,
+   "within_20pct": 64.7,
+   "share_pct": 51.2,
    "range_coverage_80": 79.4
   }
  },
@@ -436,9 +442,9 @@
  "green_max_halfwidth": 0.15,
  "amber_max_halfwidth": 0.25,
  "time_adjustment": 1.159,
+ "time_adjustment_note": "Updated from c.2022 to 2026 prices using the RBI All-India House Price Index (2022-23 = 100; Q4 2025-26 = 115.9)",
  "n_listings": 54465,
  "n_projects": 9717,
  "n_regions": 146,
- "share_with_project_comps": 80.8,
- "time_adjustment_note": "Updated from c.2022 to 2026 prices using the RBI All-India House Price Index (2022-23 = 100; Q4 2025-26 = 115.9)"
+ "share_with_project_comps": 80.8
 }

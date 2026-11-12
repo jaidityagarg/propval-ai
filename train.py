@@ -161,7 +161,8 @@ def main():
     abl = {}
     for label, drop in [("without location & distance features",
                          ["region", "zone", "lat", "lon", "dist_nariman_point_km", "dist_bkc_km",
-                          "dist_powai_km", "dist_vashi_km"]),
+                          "dist_powai_km", "dist_vashi_km", "dist_rail_km", "rail_stations_within_3km"]),
+                        ("without rail-station features", ["dist_rail_km", "rail_stations_within_3km"]),
                         ("without distance-to-hub features",
                          ["dist_nariman_point_km", "dist_bkc_km", "dist_powai_km", "dist_vashi_km"])]:
         keep = [f for f in FEATURES if f not in drop]

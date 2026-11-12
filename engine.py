@@ -23,12 +23,14 @@ LANDMARKS = {
 }
 
 CATEGORICAL = ["type", "status", "age", "region", "zone"]
-NUMERIC = ["bhk", "area", "log_area", "area_per_bhk", "lat", "lon"] + list(LANDMARKS)
+RAIL = ["dist_rail_km", "rail_stations_within_3km"]
+NUMERIC = ["bhk", "area", "log_area", "area_per_bhk", "lat", "lon"] + list(LANDMARKS) + RAIL
 FEATURES = NUMERIC + CATEGORICAL
 
 # Friendly names for explanations (groups of model features).
 FEATURE_GROUPS = {
     "Location (suburb, distance to job hubs)": ["region", "zone", "lat", "lon"] + list(LANDMARKS),
+    "Rail connectivity (nearest local station)": RAIL,
     "Size (area)": ["area", "log_area"],
     "Layout (BHK, area per room)": ["bhk", "area_per_bhk"],
     "Property type": ["type"],
@@ -49,6 +51,11 @@ def haversine_km(lat1, lon1, lat2, lon2):
     dl = np.radians(lon2 - lon1)
     a = np.sin(dphi / 2) ** 2 + np.cos(p1) * np.cos(p2) * np.sin(dl / 2) ** 2
     return 2 * r * np.arcsin(np.sqrt(a))
+
+
+def load_stations():
+    """Mumbai-region suburban railway stations (DataMeet Indian Railways open data)."""
+    return pd.read_csv(DATA / "rail_stations.csv")
 
 
 def load_regions():
@@ -124,6 +131,11 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     out["area_per_bhk"] = out["area"] / out["bhk"].clip(lower=1)
     for col, (la, lo) in LANDMARKS.items():
         out[col] = haversine_km(out["lat"], out["lon"], la, lo)
+    st = load_stations()
+    d = haversine_km(out["lat"].to_numpy()[:, None], out["lon"].to_numpy()[:, None],
+                     st["lat"].to_numpy()[None, :], st["lon"].to_numpy()[None, :])
+    out["dist_rail_km"] = d.min(axis=1)
+    out["rail_stations_within_3km"] = (d <= 3).sum(axis=1)
     for c in CATEGORICAL:
         out[c] = out[c].astype("category")
     return out

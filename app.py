@@ -240,8 +240,8 @@ with tab_how:
     st.markdown(f"""
 ### How PropVal AI values a property
 1. **Data**: {meta['n_listings']:,} cleaned listings across {meta['n_regions']} suburbs and {meta['n_projects']:,}
-   projects in the Mumbai Metropolitan Region, plus suburb coordinates and distances to the main job hubs
-   (Nariman Point, BKC, Powai, Vashi).
+   projects in the Mumbai Metropolitan Region, plus suburb coordinates, distances to the main job hubs
+   (Nariman Point, BKC, Powai, Vashi) and to the nearest of 112 suburban railway stations (DataMeet open data).
 2. **ML model**: a gradient-boosting model (LightGBM) predicts the price per sq ft from location, size, layout,
    type, construction status and new/resale.
 3. **Comparables**: if the same project has other listings, their prices are blended in

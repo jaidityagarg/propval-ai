@@ -53,6 +53,7 @@ See `reports/accuracy.md`. The test is strict: flats are scored on projects the 
 
 - Mumbai House Prices dataset, Kaggle (listing prices, c. 2022).
 - Suburb coordinates: approximate centroids. To refine them, look each suburb up on OpenStreetMap (openstreetmap.org) and update `data/regions.csv`, then run `python train.py` again.
+- Suburban railway stations: DataMeet Indian Railways open data (github.com/datameet/railways), 112 stations in the Mumbai region, saved in `data/rail_stations.csv`.
 - RBI All-India House Price Index, Q4 2025-26 press release (29 May 2026).
 - RBI Master Direction for Housing Finance Companies, 2021 (Annex XIV, valuation of properties) and RBI loan-to-value caps for housing loans.
 
