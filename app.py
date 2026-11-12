@@ -51,16 +51,16 @@ def project_index():
 
 
 def search_projects(query, limit=10):
-    """Find buildings whose name contains the most words from the query."""
+    """Find buildings by name. Returns (exact, similar): exact = names containing every word
+    of the query; similar = names sharing some words, offered only as suggestions."""
     words = [w for w in query.lower().replace(",", " ").split() if len(w) > 1]
-    if not words:
-        return project_index().iloc[0:0]
     idx = project_index().copy()
+    if not words:
+        return idx.iloc[0:0], idx.iloc[0:0]
     idx["score"] = sum(idx.key.str.contains(w, regex=False).astype(int) for w in words)
-    best = idx[idx.score > 0].sort_values(["score", "n"], ascending=False)
-    if best.empty:
-        return best
-    return best[best.score == best.score.max()].head(limit) if best.score.max() > 1 else best.head(limit)
+    exact = idx[idx.score == len(words)].sort_values("n", ascending=False).head(limit)
+    similar = idx[(idx.score > 0) & (idx.score < len(words))].sort_values(["score", "n"], ascending=False)
+    return exact, similar.head(limit)
 
 
 # Typical Mumbai area ratios relative to carpet area (approximate; builder loading varies 20-40%).
@@ -99,13 +99,20 @@ with tab_value:
                               placeholder="e.g. raheja vistas, lodha, hiranandani")
         picked = None
         if query.strip():
-            hits = search_projects(query)
-            if hits.empty:
-                st.caption("No building with that name in the data. Pick the suburb below and choose "
-                           "'New / not in list'.")
-            else:
+            exact, similar = search_projects(query)
+            NONE = "— None of these: choose the suburb below —"
+            if not exact.empty:
+                hits = exact
                 labels = [f"{r.project} — {r.region} ({r.n} listings)" for r in hits.itertuples()]
-                choice = st.selectbox("Matching buildings", labels)
+                choice = st.selectbox("Matching buildings", labels + [NONE])
+            else:
+                hits = similar
+                st.warning(f"'{query.strip()}' is not in the data (it may be newer than 2022). "
+                           "Choose its real suburb below; the building will be valued as a new project.")
+                labels = [f"{r.project} — {r.region} ({r.n} listings)" for r in hits.itertuples()]
+                choice = st.selectbox("Similar names (only pick one if it is the same building)",
+                                      [NONE] + labels) if labels else NONE
+            if choice != NONE:
                 picked = hits.iloc[labels.index(choice)]
         if picked is not None:
             region, project = picked.region, picked.project
